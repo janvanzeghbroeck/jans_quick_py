@@ -18,7 +18,7 @@ class QuickNMF(object):
 
         k = 5
             --> type int
-            --> number of clusters
+            --> number of topics
         '''
         self.k = k
         np.random.seed(42)
@@ -59,7 +59,7 @@ class QuickNMF(object):
 
         if vectorizer == None: # default vectorizer (TFIDF)
             stopwords = set(list(ENGLISH_STOP_WORDS) + stop_words)
-            vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_df=.8, min_df=.2, stop_words = stopwords, max_features = 10000)
+            vectorizer = TfidfVectorizer(ngram_range=(1, 2), max_df=.7, min_df=.1, stop_words = stopwords, max_features = 10000)
         self.vectorizer = vectorizer
         X = vectorizer.fit_transform(text) # this is the fit_transform from sklearn's tfidf not from this class
         self.processed_text = X
@@ -72,8 +72,8 @@ class QuickNMF(object):
         **kwargs will cary over to the sklearn NMF model
 
         Creates
-            self.w = labels connection with each cluster. shape = (len(labels),k)
-            self.h = words in bag (features) connection with each cluster. shape = (k, len(self.bag))
+            self.w = labels connection with each topic. shape = (len(labels),k)
+            self.h = words in bag (features) connection with each topic. shape = (k, len(self.bag))
             self.model = the sklearn nmf model
             self.topic_labels = topic label for each text document
         '''
@@ -91,7 +91,7 @@ class QuickNMF(object):
 
         top = 10
             --> type = int
-            --> prints the top this many items for each cluster
+            --> prints the top this many items for each topic
 
         returns
             --> top_words = the top words associated with each topic
@@ -101,12 +101,12 @@ class QuickNMF(object):
             #idx of the top ten words for each group
             i_words = np.argsort(self.h[group,:])[::-1][:top]
             words = self.bag[i_words]
-            top_words.append(words) #top words for each cluster
+            top_words.append(words) #top words for each topic
 
             i_label = np.argsort(self.w[:,group])[::-1][:top]
 
             print ('-'*10)
-            print ('Group:',group)
+            print ('Topic:',group)
             print ('WORDS')
             for word in words:
                 print ('-->',word)
@@ -143,15 +143,15 @@ class QuickNMF(object):
 
         plt.figure(figsize = (10,6))
 
-        # plot each cluster a different color and add size array
+        # plot each topic a different color and add size array
         for i in range(self.k):
             idx = np.argwhere(self.topic_labels==i)
             X_ = X_pca[idx][:,0]
 
-            plt.scatter(X_[:,0],X_[:,1], s = X_[:,2]*1000+267, c = colors[i], alpha = .5, label = 'cluster {}'.format(i))
+            plt.scatter(X_[:,0],X_[:,1], s = X_[:,2]*1000+267, c = colors[i], alpha = .5, label = 'topic {}'.format(i))
 
         # formatting the plot
-        plt.title('PCA Scatter Plot (explained variance = {})'.format( round(np.sum(pca.explained_variance_ratio_),3) ))
+        plt.title('PCA Scatter Plot (explained variance = {})'.format( round(np.sum(pca.explained_variance_ratio_),3) ), fontsize = 14)
         plt.ylabel('2nd PCA dimension (dot size is 3rd PCA dimension)', fontsize = 12)
         plt.xlabel('1st PCA dimension (dot size is 3rd PCA dimension)', fontsize = 12)
         plt.legend()
@@ -165,15 +165,19 @@ if __name__ == '__main__':
     plt.close('all') # close any previous plot
 
     # Get the data prepared
-    df = pd.read_pickle('data/new_beer_features.pkl')
+    df = pd.read_pickle('data/articles.pkl')
 
-    text = df['all_text'].apply(lambda x: ' '.join(x)).values
-    labels = np.array(df.index.tolist())
+    # get a random sub section of articles to make the plot easier to view
+    n_articles = 200
+    random_selection = np.random.choice(np.arange(0,len(df)), size = n_articles, replace = False)
 
-    drop_lst = ['aroma', 'note', 'notes', 'sl', 'slight', 'light', 'hint', 'bit', 'little', 'lot', 'touch', 'character', 'some', 'something', 'retro', 'thing', ' ']
+    text = df['content'].values[random_selection]
+    labels = df['headline'].values[random_selection]
+
+    drop_lst = ['news', 'article', 'said', 'mr', 'ms', 'say', 'like', 'day', 'month' ,'year'] #words to not include
 
     # start of the class
-    nmf = QuickNMF(k = 5)
+    nmf = QuickNMF(k = 3)
     nmf.Fit_transform(text, labels, stop_words = drop_lst)
     top_words = nmf.Print_tops()
     nmf.Plot_pca(show_plot = True)
