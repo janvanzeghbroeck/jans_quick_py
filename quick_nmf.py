@@ -1,3 +1,16 @@
+'''
+        A quick and simple way to use NMF on text data written by Jan Van Zeghbroeck. Enjoy!
+
+        https://github.com/janvanzeghbroeck/jans_quick_py
+
+
+        This code is meant to be used as a learning tool and isn't perfect. 
+        Please be nice to this code and treat it with respect.
+'''
+
+
+
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,15 +20,16 @@ from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 from sklearn.decomposition import NMF
 from collections import Counter
 from sklearn.decomposition import PCA
-# from sklearn.decomposition import TruncatedSVD
+
+'''
+sklearn is a pip/conda install
+pandas, numpy, and matplotlib are pip installs and included in conda
+'''
+
 
 class QuickNMF(object):
     def __init__(self,k = 5):
         '''
-        A quick and simple way to use NMF on text data written by Jan Van Zeghbroeck
-
-        https://github.com/janvanzeghbroeck/jans_quick_py
-
         k = 5
             --> type int
             --> number of topics
